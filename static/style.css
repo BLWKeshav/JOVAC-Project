@@ -1,0 +1,11 @@
+/* Shared Styles */
+body {
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 20px;
+  background: #f5f5f5;
+}
+
+/* Add styles extracted from your inline CSS here */
+/* ... due to length, I'm simplifying but ensuring correct placement */

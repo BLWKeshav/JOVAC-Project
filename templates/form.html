@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Government Letter Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #1a365d;
+      --secondary-color: #2a4a7f;
+      --accent-color: #e9b949;
+      --light-color: #f8fafc;
+      --dark-color: #2d3748;
+      --success-color: #38a169;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      font-family: 'Roboto', sans-serif;
+      color: var(--dark-color);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .logo-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 5px;
+    }
+    
+    .tagline {
+      font-size: 16px;
+      color: var(--secondary-color);
+      font-weight: 500;
+    }
+    
+    .container {
+      max-width: 750px;
+      width: 100%;
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: var(--primary-color);
+      color: white;
+      padding: 25px;
+      text-align: center;
+      border-bottom: 5px solid var(--accent-color);
+    }
+    
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .header p {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    
+    .form-container {
+      padding: 30px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--primary-color);
+    }
+    
+    input[type="text"], 
+    textarea, 
+    select {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    input[type="text"]:focus, 
+    textarea:focus, 
+    select:focus {
+      outline: none;
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 0 3px rgba(42, 74, 127, 0.2);
+    }
+    
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    select {
+      background: white;
+      cursor: pointer;
+    }
+    
+    .submit-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: var(--border-radius);
+      font-size: 18px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      margin-top: 10px;
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .submit-btn:hover {
+      background: var(--secondary-color);
+      transform: translateY(-2px);
+    }
+    
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+    
+    .info-box {
+      background: #e6f7ff;
+      border-left: 4px solid #1890ff;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    
+    .info-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: var(--primary-color);
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 14px;
+      color: #718096;
+      background: #f7fafc;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 20px;
+      width: 100%;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        margin: 10px;
+        width: auto;
+      }
+      
+      .form-container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-container">
+    <div class="logo">Government Letter Generator</div>
+    <div class="tagline">Professional Correspondence Made Easy</div>
+  </div>
+  
+  <div class="container">
+    <div class="header">
+      <h1>Official Letter Drafting System</h1>
+      <p>Create professional government letters in the correct format</p>
+    </div>
+    
+    <div class="form-container">
+      <div class="info-box">
+        <div class="info-title">Important Information</div>
+        <p>This tool helps you generate properly formatted letters for official government correspondence. All fields are required.</p>
+      </div>
+      
+      <form method="post" action="/preview">
+        <div class="form-group">
+          <label for="name">Your Full Name:</label>
+          <input type="text" id="name" name="name" required placeholder="Enter your full name">
+        </div>
+        
+        <div class="form-group">
+          <label for="address">Your Complete Address:</label>
+          <textarea id="address" name="address" required placeholder="Enter your complete address including PIN code"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="subject">Letter Subject:</label>
+          <input type="text" id="subject" name="subject" required placeholder="Enter the subject of your letter">
+        </div>
+        
+        <div class="form-group">
+          <label for="recipient_name">Recipient Name & Designation:</label>
+          <input type="text" id="recipient_name" name="recipient_name" required placeholder="e.g., The Public Information Officer">
+        </div>
+        
+        <div class="form-group">
+          <label for="recipient_address">Recipient Address:</label>
+          <textarea id="recipient_address" name="recipient_address" required placeholder="Enter recipient's complete address"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="letter_type">Letter Type:</label>
+          <select id="letter_type" name="letter_type" required>
+            <option value="">Select letter type</option>
+            <option value="RTI">RTI Request</option>
+            <option value="Police Complaint">Police Complaint</option>
+            <option value="Leave Application">Leave Application</option>
+            <option value="Official Complaint">Official Complaint</option>
+            <option value="Application">General Application</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="body">Letter Details:</label>
+          <textarea id="body" name="body" required placeholder="Provide the details of your request"></textarea>
+        </div>
+        
+        <button type="submit" class="submit-btn">Preview Letter</button>
+      </form>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <p>© 2023 Government Letter Generator | Designed for Official Use</p>
+  </div>
+</body>
+</html>
