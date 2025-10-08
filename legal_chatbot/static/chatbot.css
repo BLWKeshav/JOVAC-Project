@@ -1,0 +1,123 @@
+/* General Page Styling */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(180deg, #e9f1fa 0%, #ffffff 100%);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Header */
+header {
+  background-color: #0a4da3;
+  color: white;
+  text-align: center;
+  padding: 1rem 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Chat Section */
+.chat-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+.chat-container {
+  background-color: white;
+  width: 95%;
+  max-width: 600px;
+  height: 70vh;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Chat Box */
+.chat-box {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  scroll-behavior: smooth;
+}
+
+/* Chat Bubbles */
+.user-message, .bot-message {
+  max-width: 75%;
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.user-message {
+  background-color: #0078d7;
+  color: white;
+  align-self: flex-end;
+}
+
+.bot-message {
+  background-color: #f1f1f1;
+  color: #333;
+  align-self: flex-start;
+}
+
+/* Typing Animation */
+.typing {
+  display: inline-block;
+  animation: blink 1s infinite;
+}
+@keyframes blink {
+  0% { opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { opacity: 0.2; }
+}
+
+/* Input Area */
+.input-container {
+  display: flex;
+  border-top: 1px solid #ccc;
+  padding: 0.5rem;
+  background: #f9f9f9;
+}
+
+#user-input {
+  flex: 1;
+  padding: 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  font-size: 1rem;
+}
+
+#send-btn, #restart-btn {
+  background-color: #0a4da3;
+  color: white;
+  border: none;
+  margin-left: 0.5rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#send-btn:hover, #restart-btn:hover {
+  background-color: #083a7a;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  background: #f0f0f0;
+  padding: 0.6rem;
+  font-size: 0.85rem;
+  color: #555;
+  border-top: 1px solid #ddd;
+}

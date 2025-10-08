@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LegalDoc Chatbot</title>
+  <link rel="stylesheet" href="chatbot.css">
+</head>
+<body>
+  <header>
+    <h1>LegalDoc Chatbot</h1>
+  </header>
+
+  <main>
+    <section class="chat-section">
+      <div class="chat-container">
+        <div id="chat-box" class="chat-box">
+          <div class="bot-message">👋 Hello! I’m LegalDoc Chatbot. Which document would you like to draft today (e.g., WILL, RTI, FIR)?</div>
+        </div>
+
+        <div class="input-container">
+          <input type="text" id="user-input" placeholder="Type your message here...">
+          <button id="send-btn">Send</button>
+          <button id="restart-btn">Restart</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>⚖️ This chatbot generates draft legal documents for educational purposes only. Please review with a qualified legal professional before using.</p>
+  </footer>
+
+  <script src="chatbot.js"></script>
+</body>
+</html>
