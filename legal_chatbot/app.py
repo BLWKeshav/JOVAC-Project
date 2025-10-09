@@ -7,7 +7,7 @@ import ollama # Import the new ollama library
 import json   # Import the json library for data extraction
 
 app = Flask(__name__)
-app.secret_key = "replace_with_a_random_secret"
+app.secret_key = ""
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
@@ -25,8 +25,7 @@ DOC_FIELDS = {
         ("witness1", "Witness 1 - Name & Address"),
         ("witness2", "Witness 2 - Name & Address")
     ],
-    # ... (other document fields are unchanged, so they are omitted here for brevity)
-    # The full DOC_FIELDS dictionary from your original file should be here.
+    
     "FIR": [("complainant_name", "Complainant full name"), ("complainant_address", "Complainant address & contact"), ("date_time_of_incident", "Date & time of incident"), ("incident_location", "Location of incident"), ("incident_details", "Describe incident in chronological order"), ("accused", "Name(s) of accused (if known) or 'Unknown'"), ("witnesses", "Witness details (if any)"), ("loss_details", "Loss/damage (if any)"), ("sections", "Suspected sections of law (optional)"), ("signature_date", "Signature date")],
     "RTI": [("applicant_name", "Applicant full name"), ("applicant_address", "Applicant address & contact"), ("public_authority", "Name & address of Public Authority / PIO"), ("subject_info", "Subject of information requested (short line)"), ("detailed_questions", "Numbered questions / details of information required"), ("period", "Period for which information is sought (from - to)"), ("preferred_format", "Preferred format (Paper / Digital / Inspection)"), ("fee_details", "RTI fee details (if paid) or 'N/A'"), ("declaration", "Declaration (if any)"), ("application_date", "Application date")],
     "AFFIDAVIT": [("deponent_name", "Deponent full name"), ("father_or_husband", "Father's / Husband's name"), ("deponent_address", "Deponent residential address"), ("age_dob", "Age / Date of birth"), ("occupation", "Occupation"), ("purpose", "Purpose of affidavit (short)"), ("statements", "Statement paragraphs (numbered facts)"), ("place_date", "Place & Date of oath"), ("notary_details", "Notary / Oath officer details (Name, reg no.)"), ("signature", "Signature of Deponent")],
@@ -37,10 +36,8 @@ DOC_FIELDS = {
 }
 
 
-# The draft formatting function remains the same
 def format_draft(doc_type, answers):
-    # ... (The format_draft function is unchanged)
-    # The full format_draft function from your original file should be here.
+    
     header = f"{doc_type} - Draft\nGenerated on {datetime.datetime.now().strftime('%d %b %Y %H:%M')}\n\n"; body = "";
     if doc_type == "WILL": body += "LAST WILL AND TESTAMENT\n\n"; body += f"I, {answers.get('testator_name','')} of {answers.get('testator_address','')}, being of sound mind, declare this to be my last will made on {answers.get('date_place','')}.\n\n"; body += "APPOINTMENT OF EXECUTOR:\n"; body += f"{answers.get('executor_name','')}\n\n"; body += "BEQUESTS / BENEFICIARIES:\n"; body += f"{answers.get('beneficiaries','')}\n\n"; body += "ASSETS:\n"; body += f"{answers.get('assets','')}\n\n"; sc = answers.get('special_clauses','');
     elif doc_type == "FIR": body += "FIRST INFORMATION REPORT (Draft)\n\n"; body += f"Complainant: {answers.get('complainant_name','')}\nAddress: {answers.get('complainant_address','')}\n\n"; body += f"Date & Time of Incident: {answers.get('date_time_of_incident','')}\nLocation: {answers.get('incident_location','')}\n\n"; body += "DETAILS OF INCIDENT (Chronological):\n" + answers.get('incident_details','') + "\n\n"; body += f"Accused (if known): {answers.get('accused','')}\nWitnesses: {answers.get('witnesses','')}\nLoss/Damage: {answers.get('loss_details','')}\n\n";
@@ -52,7 +49,6 @@ def format_draft(doc_type, answers):
     else: body += f"Date: {answers.get('letter_date',answers.get('letter_date',''))}\n\n"; body += f"From: {answers.get('sender','')}\nTo: {answers.get('recipient','')}\n\n"; body += f"Subject: {answers.get('subject','')}\n\n"; body += "Background:\n" + answers.get('background_facts',answers.get('background_facts','')) + "\n\n"; body += "Legal Position:\n" + answers.get('legal_position',answers.get('legal_position','')) + "\n\n"; body += "Request / Relief:\n" + answers.get('request_action',answers.get('request_action','')) + "\n\n";
     draft = header + body + "\nDisclaimer: This draft is auto-generated and should be reviewed by a qualified legal professional before official use."; return draft
 
-# --- NEW: System prompt for the Ollama model ---
 SYSTEM_PROMPT = """
 You are 'LegalGen', a friendly and professional AI assistant. Your goal is to help a user draft a legal document.
 
@@ -67,7 +63,7 @@ Your process is as follows:
 @app.route('/')
 def index():
     session.clear()
-    # Initialize the conversation history in the session
+   
     session['messages'] = [{'role': 'system', 'content': SYSTEM_PROMPT}]
     session['stage'] = 'CONVERSATION'
     return render_template('index.html')
@@ -84,7 +80,7 @@ def chat():
 
         # Call Ollama to get the next response
         response = ollama.chat(
-            model='llama3:8b', # Or another model you have pulled
+            model='llama3:8b', 
             messages=session['messages']
         )
         bot_response = response['message']['content']
@@ -130,7 +126,7 @@ def chat():
             model='llama3',
             messages=[{'role': 'user', 'content': extraction_prompt}],
             options={'temperature': 0.0},
-            format='json' # Ollama's JSON mode is perfect for this
+            format='json' 
         )
 
         try:
@@ -145,13 +141,12 @@ def chat():
             return jsonify({'type':'text', 'response': f'Sorry, I had trouble structuring the data. Error: {e}. Please refresh to try again.'})
 
 
-    # Completed or fallback
     return jsonify({'type':'text','response':'Session ended. Refresh page to start a new draft.'})
 
 
 @app.route('/download_pdf', methods=['GET'])
 def download_pdf():
-    # This function remains unchanged
+    
     draft = session.get('last_draft','')
     if not draft: return "No draft available.", 400
     buffer = io.BytesIO(); c = canvas.Canvas(buffer, pagesize=A4); width, height = A4;
