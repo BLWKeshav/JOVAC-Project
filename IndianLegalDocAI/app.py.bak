@@ -1,0 +1,39 @@
+import os
+from flask import Flask, render_template, request, send_file
+from utils.pdf_generator import generate_pdf
+
+app = Flask(__name__)
+
+DOCUMENT_TEMPLATES = {
+    'FIR': 'documents/FIR_template.txt',
+    'RTI': 'documents/RTI_template.txt',
+    'Will': 'documents/Will_template.txt',
+    'Legal Notice': 'documents/LegalNotice_template.txt',
+    'Business License': 'documents/BusinessLicense_template.txt',
+    'Affidavit': 'documents/Affidavit_template.txt'
+}
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        doc_type = request.form.get('doc_type')
+        inputs = {key: request.form[key] for key in request.form if key != 'doc_type'}
+        template_path = DOCUMENT_TEMPLATES.get(doc_type)
+        if template_path:
+            filled_text = ''
+            with open(template_path, 'r', encoding='utf-8') as f:
+                filled_text = f.read()
+            for placeholder, value in inputs.items():
+                filled_text = filled_text.replace(f'[{placeholder}]', value)
+            pdf_path = os.path.join('documents', f'{doc_type}_Generated.pdf')
+            generate_pdf(filled_text, pdf_path)
+            return render_template('preview.html', content=filled_text, pdf_file=pdf_path)
+    return render_template('form.html', doc_types=DOCUMENT_TEMPLATES.keys())
+
+@app.route('/download')
+def download():
+    pdf_file = request.args.get('file')
+    return send_file(pdf_file, as_attachment=True)
+
+if __name__ == '__main__':
+    app.run(debug=True)

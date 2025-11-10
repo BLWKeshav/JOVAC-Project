@@ -1,0 +1,14 @@
+To,
+The Public Information Officer,
+[Department_Name],
+[Address]
+
+Subject: Request under RTI Act, 2005
+
+Dear Sir/Madam,
+I, [Full_Name], resident of [Address], hereby seek the following information:
+[Incident_Details]
+
+Date: [Date]
+Sincerely,
+[Full_Name]
