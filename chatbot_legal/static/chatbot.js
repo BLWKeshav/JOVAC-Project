@@ -30,8 +30,12 @@ async function sendMessage(){
   if (data.type === 'text'){
     appendMessage('Bot', data.response);
   } else if (data.type === 'preview'){
-    appendMessage('Bot', 'Here is the draft preview:');
-    showPreview(data.response, data.pdf_url);
+    // Show bot's message if provided, otherwise use default
+    const botMsg = data.bot_message || 'All information collected! Your document has been generated successfully.';
+    // Immediately show preview button FIRST - appears as soon as all fields collected
+    showPreview(data.response, data.preview_url, data.pdf_url, data.doc_type, data.preview_page_url);
+    // Then show bot's message
+    appendMessage('Bot', botMsg);
   }
 }
 
@@ -44,11 +48,20 @@ function appendMessage(sender, text){
   box.scrollTop = box.scrollHeight;
 }
 
-function showPreview(htmlText, pdfUrl){
+function showPreview(htmlText, previewUrl, pdfUrl, docType, previewPageUrl){
   const area = document.getElementById('generatedDoc');
-  area.innerHTML = `<div class="preview">${htmlText}</div>
-                    <a class="link-btn" href="${pdfUrl}" target="_blank">Download PDF</a>
-                    <p style="font-size:12px;color:#6b7280;margin-top:8px;">Note: PDF will download the same content shown in preview.</p>`;
+  area.innerHTML = `
+    <div class="preview-ready-message">
+      <div class="success-icon">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <h3>Document Generated Successfully!</h3>
+      <p>Your ${docType ? docType.replace(/_/g, ' ') : 'document'} has been prepared. Click the button below to preview and download.</p>
+      <a href="${previewPageUrl || '/preview'}" class="preview-page-btn">
+        <i class="fa-solid fa-eye"></i> View Preview & Download
+      </a>
+    </div>
+  `;
   area.scrollIntoView({behavior:'smooth'});
 }
 

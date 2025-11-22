@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Preview - Legal Document Generator</title>
+    <link rel="stylesheet" href="/static/chatbot.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        .preview-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: rgba(11, 17, 32, 0.9);
+            border: 2px solid #3d52a0;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(61, 82, 160, 0.5);
+        }
+        .preview-header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #3d52a0;
+        }
+        .preview-title {
+            color: #f1f5f9;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .preview-actions {
+            display: flex;
+            gap: 15px;
+        }
+        .action-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: #c792ea;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #b882d9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(199, 146, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #3d52a0;
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background: #2d4280;
+            transform: translateY(-2px);
+        }
+        .btn-back {
+            background: transparent;
+            color: #c792ea;
+            border: 2px solid #c792ea;
+        }
+        .btn-back:hover {
+            background: #c792ea;
+            color: #fff;
+        }
+        .preview-content {
+            background-color: #f8fafc;
+            color: #1e293b;
+            border-radius: 12px;
+            padding: 0;
+            min-height: 600px;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        .pdf-embed {
+            width: 100%;
+            height: 80vh;
+            min-height: 600px;
+            border: none;
+            display: block;
+        }
+        .pdf-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 600px;
+            flex-direction: column;
+            gap: 20px;
+            color: #1e293b;
+        }
+        .pdf-loading i {
+            font-size: 3rem;
+            color: #3d52a0;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .confirmation-section {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: rgba(199, 146, 234, 0.1);
+            border-radius: 12px;
+            border: 2px solid #c792ea;
+            text-align: center;
+        }
+        .confirm-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        .confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+            background: linear-gradient(135deg, #059669, #047857);
+        }
+        .confirm-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .preview-note {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(199, 146, 234, 0.1);
+            border-left: 4px solid #c792ea;
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <a href="/" class="btn-back action-btn">
+                <i class="fa-solid fa-arrow-left"></i> Back to Chat
+            </a>
+        </div>
+        <div class="header-center">
+            <h1>GOVERNMENT OF INDIA</h1>
+        </div>
+        <div class="header-right">
+            <i class="fa-solid fa-circle-user user-icon"></i>
+            <div class="user-info">
+                <span>ayush sharma</span>
+                <a href="#">About</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="preview-container">
+            <div class="preview-header-section">
+                <h2 class="preview-title" id="docTypeTitle">PDF Document Preview</h2>
+                <div class="preview-actions">
+                    <a href="/" class="action-btn btn-back">
+                        <i class="fa-solid fa-arrow-left"></i> Back
+                    </a>
+                </div>
+            </div>
+            <div class="preview-content" id="previewContent">
+                <div class="pdf-loading">
+                    <i class="fa-solid fa-spinner"></i>
+                    <p>Loading PDF preview...</p>
+                </div>
+            </div>
+            <div class="confirmation-section" id="confirmationSection" style="display: none;">
+                <h3 style="color: #f1f5f9; margin-bottom: 15px;">
+                    <i class="fa-solid fa-check-circle" style="color: #10b981;"></i> Review Complete
+                </h3>
+                <p style="color: #cbd5e1; margin-bottom: 20px;">
+                    Please review the PDF document above. If everything looks correct, click the button below to download your legal document.
+                </p>
+                <button id="confirmDownloadBtn" class="confirm-btn">
+                    <i class="fa-solid fa-download"></i> Confirm & Download PDF
+                </button>
+            </div>
+            <div class="preview-note">
+                <i class="fa-solid fa-info-circle"></i> 
+                <strong>Important:</strong> This is an auto-generated draft. Please review the PDF content carefully and consult with a qualified legal professional before official submission or use.
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let pdfPreviewUrl = '';
+        let pdfDownloadUrl = '';
+        
+        // Get preview data from session
+        async function loadPreview() {
+            try {
+                const response = await fetch('/api/get_preview');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('docTypeTitle').textContent = data.doc_type ? data.doc_type.replace(/_/g, ' ') + ' - PDF Preview' : 'PDF Document Preview';
+                    
+                    // Store URLs
+                    pdfPreviewUrl = data.preview_url;
+                    pdfDownloadUrl = data.pdf_url;
+                    
+                    // Embed PDF for preview
+                    const previewContent = document.getElementById('previewContent');
+                    previewContent.innerHTML = `
+                        <iframe class="pdf-embed" src="${pdfPreviewUrl}" type="application/pdf">
+                            <p>Your browser does not support PDFs. <a href="${pdfPreviewUrl}" target="_blank">Click here to download the PDF</a>.</p>
+                        </iframe>
+                    `;
+                    
+                    // Show confirmation section after PDF loads
+                    const iframe = previewContent.querySelector('iframe');
+                    iframe.onload = function() {
+                        setTimeout(() => {
+                            document.getElementById('confirmationSection').style.display = 'block';
+                            document.getElementById('confirmationSection').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                        }, 1000);
+                    };
+                    
+                } else {
+                    document.getElementById('previewContent').innerHTML = '<div class="pdf-loading"><i class="fa-solid fa-exclamation-triangle"></i><p style="color: #dc2626;">Error loading preview. Please go back and try again.</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('previewContent').innerHTML = '<div class="pdf-loading"><i class="fa-solid fa-exclamation-triangle"></i><p style="color: #dc2626;">Error loading preview: ' + error.message + '</p></div>';
+            }
+        }
+        
+        // Handle confirm and download
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmBtn = document.getElementById('confirmDownloadBtn');
+            confirmBtn.addEventListener('click', function() {
+                // Disable button to prevent multiple clicks
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Downloading...';
+                
+                // Trigger download - the server will send appropriate filename
+                const link = document.createElement('a');
+                link.href = pdfDownloadUrl;
+                // Don't set download attribute - let browser handle it with server filename
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Update button after download
+                setTimeout(() => {
+                    confirmBtn.innerHTML = '<i class="fa-solid fa-check"></i> Downloaded Successfully!';
+                    confirmBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                }, 1000);
+            });
+        });
+        
+        window.onload = loadPreview;
+    </script>
+</body>
+</html>
+
