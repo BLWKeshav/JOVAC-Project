@@ -649,46 +649,122 @@ def get_preview():
 
 @app.route('/download_pdf', methods=['GET'])
 def download_pdf():
-    # This function remains unchanged
-    draft = session.get('last_draft','')
-    if not draft: return "No draft available.", 400
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    left_margin = 40
-    top = height - 50
-    lines = draft.split('\n')
-    text_obj = c.beginText(left_margin, top)
-    text_obj.setFont('Times-Roman', 11)
-    max_width = width - 2*left_margin
-    for line in lines:
-        while len(line) > 0:
-            max_chars = int(max_width / 6)
-            chunk = line[:max_chars]
-            if len(line) > max_chars:
-                last_space = chunk.rfind(' ')
-                if last_space > 10:
-                    chunk = line[:last_space]
-            text_obj.textLine(chunk)
-            line = line[len(chunk):].lstrip()
-    c.drawText(text_obj)
-    c.showPage()
-    c.save()
-    buffer.seek(0)
-    mode = request.args.get('mode', 'download')
-    as_attachment = mode != 'preview'
-    
-    # Generate appropriate filename based on document type
-    doc_type = session.get('doc_type', 'Document')
-    doc_type_clean = doc_type.replace('_', ' ').title()
-    filename = f"{doc_type_clean}_Legal_Document.pdf"
-    
-    return send_file(
-        buffer,
-        as_attachment=as_attachment,
-        download_name=filename,
-        mimetype='application/pdf'
-    )
+    try:
+        draft = session.get('last_draft','')
+        if not draft: 
+            return "No draft available.", 400
+        
+        # Remove ALL duplicate content lines and separator lines
+        # This ensures each unique content line appears only once, and removes separators
+        lines = draft.split('\n')
+        cleaned_lines = []
+        seen_content = set()  # Track content lines we've seen
+        
+        for line in lines:
+            line_stripped = line.strip()
+            # Check if line is a separator (contains only = or - characters)
+            is_separator = (line_stripped and 
+                          (all(c == '=' for c in line_stripped) or 
+                           all(c == '-' for c in line_stripped)))
+            is_empty = not line_stripped
+            
+            # Skip separator lines completely
+            if is_separator:
+                continue
+            # For empty lines, limit to max 1 consecutive
+            elif is_empty:
+                # Only add if last line wasn't empty
+                if not cleaned_lines or cleaned_lines[-1].strip():
+                    cleaned_lines.append(line)
+            else:
+                # For content lines, only add if we haven't seen this exact line before
+                if line not in seen_content:
+                    cleaned_lines.append(line)
+                    seen_content.add(line)
+        
+        buffer = io.BytesIO()
+        c = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+        left_margin = 40
+        top = height - 50
+        line_height = 14
+        y_position = top
+        
+        # Set font once
+        c.setFont('Times-Roman', 11)
+        
+        # Calculate max width for text
+        max_width = width - 2 * left_margin
+        # Approximate characters per line (Times-Roman 11pt is about 6.5 points per char)
+        max_chars_per_line = int(max_width / 6.5)
+        
+        # Process each line exactly once - use drawString to write directly
+        for line in cleaned_lines:
+            # Check if we need a new page
+            if y_position < 50:
+                c.showPage()
+                y_position = height - 50
+                c.setFont('Times-Roman', 11)  # Reset font on new page
+            
+            # Handle empty lines
+            if not line.strip():
+                y_position -= line_height
+                continue
+            
+            # Process line - wrap if necessary
+            remaining = line
+            while remaining:
+                # Check if we need a new page before writing
+                if y_position < 50:
+                    c.showPage()
+                    y_position = height - 50
+                    c.setFont('Times-Roman', 11)
+                
+                # Check if line fits
+                if len(remaining) <= max_chars_per_line:
+                    # Write the entire line directly at coordinates
+                    c.drawString(left_margin, y_position, remaining)
+                    y_position -= line_height
+                    remaining = ''
+                else:
+                    # Need to wrap - find break point
+                    chunk = remaining[:max_chars_per_line]
+                    last_space = chunk.rfind(' ')
+                    
+                    if last_space > max_chars_per_line * 0.5:
+                        # Break at space
+                        chunk = remaining[:last_space]
+                        remaining = remaining[last_space:].lstrip()
+                    else:
+                        # Break at max_chars
+                        chunk = remaining[:max_chars_per_line]
+                        remaining = remaining[max_chars_per_line:].lstrip()
+                    
+                    # Write the chunk directly at coordinates
+                    c.drawString(left_margin, y_position, chunk)
+                    y_position -= line_height
+        
+        # Final page
+        c.showPage()
+        c.save()
+        buffer.seek(0)
+        mode = request.args.get('mode', 'download')
+        as_attachment = mode != 'preview'
+        
+        # Generate appropriate filename based on document type
+        doc_type = session.get('doc_type', 'Document')
+        doc_type_clean = doc_type.replace('_', ' ').title()
+        filename = f"{doc_type_clean}_Legal_Document.pdf"
+        
+        return send_file(
+            buffer,
+            as_attachment=as_attachment,
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+    except Exception as e:
+        import traceback
+        return f"Error generating PDF: {str(e)}\n{traceback.format_exc()}", 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
