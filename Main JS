@@ -1,0 +1,474 @@
+(function loadJsPDF(){
+  if (window.jspdf) return;
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  s.onload = () => console.log('jsPDF loaded');
+  s.onerror = () => console.warn('Failed to load jsPDF CDN — PDF generation will fail.');
+  document.head.appendChild(s);
+})();
+
+/* ------------------ Utility helpers ------------------ */
+function addMessage(html, sender = 'bot') {
+  const box = document.getElementById('messages');
+  const el = document.createElement('div');
+  el.className = sender;
+  el.innerHTML = html.replace(/\n/g, '<br>');
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+function escapeHtml(s) {
+  if (s === undefined || s === null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+}
+
+
+
+/* ------------------ Typing effect helper ------------------ */
+function showTyping(duration = 600) {
+  const box = document.getElementById('messages');
+  const spinner = document.createElement('div');
+  spinner.className = 'typing';
+  spinner.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+  box.appendChild(spinner);
+  box.scrollTop = box.scrollHeight;
+  return new Promise(resolve => setTimeout(() => { spinner.remove(); resolve(); }, duration));
+}
+
+/* ------------------ Voice input (kept) ------------------ */
+function startVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert("Voice input not supported in this browser."); return; }
+  const r = new SR();
+  r.lang = 'en-IN';
+  r.start();
+  r.onresult = (e) => {
+    const t = e.results[0][0].transcript;
+    document.getElementById('userInput').value = t;
+  };
+}
+window.startVoice = startVoice;
+
+/* ------------------ Login & Feedback (simple) ------------------ */
+document.querySelector('.profile-icon')?.addEventListener('click', () => {
+  document.getElementById('loginModal').style.display = 'flex';
+});
+function closeLogin(){ document.getElementById('loginModal').style.display = 'none'; }
+function loginUser(){
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value.trim();
+  if (!u || !p) { alert('Fill both fields'); return; }
+  alert('Welcome, ' + u);
+  closeLogin();
+}
+function openFeedback(){ document.getElementById('feedbackModal').style.display = 'flex'; }
+function closeFeedback(){ document.getElementById('feedbackModal').style.display = 'none'; }
+function submitFeedback(){
+  const t = document.getElementById('feedbackText').value.trim();
+  if (!t) { alert('Write feedback'); return; }
+  addMessage('Thank you for your feedback!', 'bot');
+  document.getElementById('feedbackText').value = '';
+  closeFeedback();
+}
+window.loginUser = loginUser;
+window.closeLogin = closeLogin;
+window.openFeedback = openFeedback;
+window.closeFeedback = closeFeedback;
+window.submitFeedback = submitFeedback;
+
+/* ------------------ Document question sets (English) ------------------ */
+const QUESTION_SETS = {
+  RTI: [
+    {k:'applicant_name', q:'Applicant full name:'},
+    {k:'father_name', q:'Father / Guardian name:'},
+    {k:'address', q:'Full address (include PIN):'},
+    {k:'email', q:'Email (optional):'},
+    {k:'phone', q:'Phone (optional):'},
+    {k:'department', q:'Department / Office name:'},
+    {k:'pio', q:'PIO name (if known):'},
+    {k:'information', q:'Exactly what information do you seek (be specific):'},
+    {k:'time_period', q:'Time period required (e.g., Jan 2020 - Dec 2024):'},
+    {k:'enclosures', q:'Enclosures (ID proof etc.) if any:'}
+  ],
+  FIR: [
+    {k:'complainant_name', q:'Your full name:'},
+    {k:'address', q:'Your address:'},
+    {k:'phone', q:'Contact number:'},
+    {k:'incident_type', q:'Type of incident (Theft/Assault/Other):'},
+    {k:'incident_date', q:'Date of incident (DD-MM-YYYY):'},
+    {k:'incident_time', q:'Approx time of incident:'},
+    {k:'incident_place', q:'Location / place of incident:'},
+    {k:'description', q:'Detailed description of the incident:'},
+    {k:'suspect_details', q:'Suspect details (if any):'},
+    {k:'police_station', q:'Police Station name where FIR should be registered:'}
+  ],
+  AFFIDAVIT: [
+    {k:'deponent_name', q:'Deponent full name:'},
+    {k:'father_name', q:'Father / Husband name:'},
+    {k:'age', q:'Age:'},
+    {k:'address', q:'Address:'},
+    {k:'purpose', q:'Purpose of affidavit:'},
+    {k:'statements', q:'Affidavit statements (write clearly):'},
+    {k:'id_proof', q:'ID proof (type & number):'},
+    {k:'place', q:'Place of oath:'}
+  ],
+  BONAFIDE: [
+    {k:'student_name', q:'Student full name:'},
+    {k:'institution', q:'School / College name:'},
+    {k:'class', q:'Class / Course / Year:'},
+    {k:'roll', q:'Roll number (if any):'},
+    {k:'purpose', q:'Purpose of certificate:'},
+    {k:'duration', q:'Academic year or duration if required:'}
+  ],
+  BIRTH: [
+    {k:'child_name', q:'Child full name:'},
+    {k:'father_name', q:'Father name:'},
+    {k:'mother_name', q:'Mother name:'},
+    {k:'birth_date', q:'Date of birth (DD-MM-YYYY):'},
+    {k:'birth_place', q:'Place of birth (hospital/location):'},
+    {k:'sex', q:'Sex of child:'},
+    {k:'hospital', q:'Hospital / Registrar name:'},
+    {k:'purpose', q:'Purpose for certificate:'}
+  ],
+  LEGAL: [
+    {k:'sender_name', q:'Your full name (sender):'},
+    {k:'sender_address', q:'Your address:'},
+    {k:'receiver_name', q:'Recipient / Opposite party name:'},
+    {k:'receiver_address', q:'Recipient address:'},
+    {k:'subject', q:'Subject / short title of matter:'},
+    {k:'issue', q:'Detailed description of issue / claim:'},
+    {k:'remedy', q:'What action do you request (e.g., pay amount, return property):'},
+    {k:'deadline', q:'Give a deadline for compliance (e.g., 7 days):'}
+  ],
+  PAN: [
+    {k:'name', q:'Full name:'},
+    {k:'address', q:'Address:'},
+    {k:'dob', q:'Date of birth (DD-MM-YYYY):'},
+    {k:'reason', q:'Reason for PAN application / correction:'},
+    {k:'doc', q:'Supporting document name (if any):'}
+  ],
+  AADHAR: [
+    {k:'name', q:'Full name:'},
+    {k:'aadhar_no', q:'Aadhaar number (if correcting):'},
+    {k:'address', q:'Address:'},
+    {k:'phone', q:'Phone number:'},
+    {k:'field_to_correct', q:'Field to correct (Name/DOB/Address/Gender):'},
+    {k:'correct_value', q:'Correct value:'},
+    {k:'support_doc', q:'Supporting document name:'}
+  ]
+};
+
+/* Each template returns a single string body (English) */
+const TEMPLATES = {
+  RTI: d => (
+`Government of India
+(Department / Office: ${d.department || '____________________'})
+
+Date: ${d._date}
+
+To,
+The Public Information Officer
+${d.department || '----------------'}
+${d.pio ? ('Attn: ' + d.pio) : ''}
+
+Subject: Request for information under the Right to Information Act, 2005.
+
+Respected Sir/Madam,
+
+I, ${d.applicant_name || '----'}, son/daughter of ${d.father_name || '----'}, residing at ${d.address || '----'}, hereby request the following information under the Right to Information Act, 2005 for the period ${d.time_period || '----'}:
+
+${d.information || '----'}
+
+Enclosures: ${d.enclosures || 'ID proof / supporting documents'}.
+
+Please provide the information to my address or email/phone: ${d.email || d.phone || '----'}.
+
+Yours faithfully,
+${d.applicant_name || '----'}
+Date: ${d._date}`
+  ),
+
+  FIR: d => (
+`Government of India
+(Police Department)
+
+Date: ${d._date}
+
+To,
+The Station House Officer
+${d.police_station || '____________________'}
+
+Subject: Complaint / Request for registration of FIR – ${d.incident_type || 'Incident'}
+
+Respected Sir/Madam,
+
+I, ${d.complainant_name || '----'}, resident of ${d.address || '----'}, contact number ${d.phone || '----'}, wish to report the following incident that took place on ${d.incident_date || '----'} at ${d.incident_place || '----'}:
+
+${d.description || '----'}
+
+Suspect details (if any): ${d.suspect_details || '----'}.
+
+I request you to kindly register the matter as an FIR and take appropriate action as required by law.
+
+Yours sincerely,
+${d.complainant_name || '----'}
+Date: ${d._date}`
+  ),
+
+  AFFIDAVIT: d => (
+`AFFIDAVIT
+
+I, ${d.deponent_name || '----'}, son/daughter of ${d.father_name || '----'}, aged ${d.age || '----'}, residing at ${d.address || '----'}, do hereby solemnly affirm and declare as under:
+
+${d.statements || '----'}
+
+I declare that the statements made above are true to the best of my knowledge and belief.
+
+Place: ${d.place || '----'}
+Date: ${d._date}
+
+(Signature)
+${d.deponent_name || '----'}`
+  ),
+
+  BONAFIDE: d => (
+`To Whom It May Concern,
+
+This is to certify that ${d.student_name || '----'}, son/daughter of ${d.parent_name || '----'}, Roll No: ${d.roll || '----'}, is/was a bonafide student of ${d.institution || '----'} for ${d.duration || '----'} studying ${d.class || '----'}. This certificate is issued for the purpose: ${d.purpose || '----'}.
+
+Date: ${d._date}
+
+(Principal / Head)
+${d.institution || '----'}`
+  ),
+
+  BIRTH: d => (
+`Birth Certificate (Provisional)
+
+This is to certify that a child named ${d.child_name || '----'} was born to ${d.mother_name || '----'} and ${d.father_name || '----'} on ${d.birth_date || '----'} at ${d.birth_place || '----'}. Sex: ${d.sex || '----'}. Hospital / Registrar: ${d.hospital || '----'}.
+
+This certificate is issued for: ${d.purpose || '----'}.
+
+Date: ${d._date}
+
+Registrar / Hospital Authority`
+  ),
+
+  LEGAL: d => (
+`[Official Letterhead]
+
+Date: ${d._date}
+
+To,
+${d.receiver_name || '----'}
+${d.receiver_address || '----'}
+
+Subject: ${d.subject || 'Legal Notice'}
+
+Dear ${d.receiver_name || 'Sir/Madam'},
+
+${d.issue || '----'}
+
+You are requested to ${d.remedy || '----'} within ${d.deadline || '----'} days from receipt of this notice. Failing which legal proceedings may be initiated without further notice.
+
+Yours faithfully,
+${d.sender_name || '----'}
+${d.sender_address || '----'}`
+  ),
+
+  PAN: d => (
+`To,
+Income Tax Department / NSDL
+
+Date: ${d._date}
+
+Subject: PAN ${d.reason || 'Application / Correction'}
+
+I, ${d.name || '----'}, residing at ${d.address || '----'}, DOB: ${d.dob || '----'}, request PAN ${d.reason || ''}. Enclosures: ${d.doc || 'ID / Address proof'}.
+
+Yours faithfully,
+${d.name || '----'}
+Date: ${d._date}`
+  ),
+
+  AADHAR: d => (
+`To,
+UIDAI Enrollment Centre
+
+Date: ${d._date}
+
+Subject: Aadhaar ${d.aadhar_no ? 'Correction' : 'Enrollment'} Request
+
+Respected Sir/Madam,
+
+I, ${d.name || '----'}, resident of ${d.address || '----'}, mobile: ${d.phone || '----'}, request Aadhaar ${d.aadhar_no ? ('correction for ' + d.field_to_correct) : 'enrolment'}. Correct details: ${d.correct_value || '----'}.
+
+Supporting document: ${d.support_doc || '----'}.
+
+Yours faithfully,
+${d.name || '----'}
+Date: ${d._date}`
+  )
+};
+
+/* ------------------ LetterFlow engine ------------------ */
+const LetterFlow = (function(){
+  let active = false;
+  let docType = null;
+  let qIndex = 0;
+  let answers = [];
+  let qList = [];
+
+  function isActive(){ return active; }
+
+  async function start(type) {
+    if (!QUESTION_SETS[type]) { addMessage('Document not supported.', 'bot'); return; }
+    active = true; docType = type; qIndex = 0; answers = []; qList = QUESTION_SETS[type];
+    await showTyping(400);
+    addMessage(`<strong>${type} generation started.</strong> Please answer the questions. (Type CANCEL to stop, RESTART to restart)`, 'bot');
+    ask();
+  }
+
+  function ask() {
+    if (!active) return;
+    const q = qList[qIndex].q;
+    addMessage(q, 'bot');
+  }
+
+  async function receive(text) {
+    if (!active) { addMessage('No active form. Type a document name or use a button to start.', 'bot'); return; }
+    const t = text.trim();
+    if (t.toUpperCase() === 'CANCEL') { addMessage('Process cancelled.', 'bot'); reset(); return; }
+    if (t.toUpperCase() === 'RESTART') { addMessage('Restarting form...', 'bot'); qIndex = 0; answers = []; ask(); return; }
+    answers[qList[qIndex].k] = t;
+    if (qIndex < qList.length - 1) { qIndex++; ask(); }
+    else { addMessage('All details received. Preparing PDF...', 'bot'); finish(); }
+  }
+
+  function finish() {
+    // prepare data object
+    const data = Object.assign({}, answers);
+    data._date = new Date().toLocaleDateString();
+    const templateFn = TEMPLATES[docType];
+    const body = templateFn ? templateFn(data) : JSON.stringify(data, null, 2);
+    generateOfficialPDF(docType, body);
+    reset();
+  }
+
+  function reset(){ active = false; docType = null; qIndex = 0; answers = []; qList = []; }
+
+  return { start, receive, isActive, reset };
+})();
+
+/* ------------------ Exposed start function ------------------ */
+function startLetterFlow(type) {
+  if (LetterFlow.isActive()) { addMessage('A form is already active. Type CANCEL to stop it first.', 'bot'); return; }
+  LetterFlow.start(type);
+}
+
+/* ------------------ Process user input from chat ------------------ */
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const raw = input.value.trim();
+  if (!raw) return;
+  addMessage(escapeHtml(raw), 'user');
+  input.value = '';
+
+  // If a flow is active, forward
+  if (LetterFlow.isActive()) { LetterFlow.receive(raw); return; }
+
+  // If user typed document name, start it
+  const map = {
+    'rti':'RTI','fir':'FIR','affidavit':'AFFIDAVIT','aadhar':'AADHAR','aadhaar':'AADHAR',
+    'pan':'PAN','bonafide':'BONAFIDE','birth':'BIRTH','legal':'LEGAL'
+  };
+  const key = raw.toLowerCase();
+  if (map[key]) { startLetterFlow(map[key]); return; }
+
+  // otherwise show help
+  await showTyping(500);
+  addMessage('Type a document name (RTI, FIR, Affidavit, AADHAR, PAN, Bonafide, Birth, Legal) or click a button to start.', 'bot');
+}
+window.sendMessage = sendMessage;
+
+/* ------------------ PDF generation (professional layout) ------------------ */
+function generateOfficialPDF(title, bodyText) {
+  try {
+    if (!window.jspdf) throw new Error('jsPDF not loaded');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const marginLeft = 18;
+    const marginRight = 18;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const usableWidth = pageWidth - marginLeft - marginRight;
+    let y = 20;
+
+    // Header
+    doc.setFontSize(12);
+    doc.setFont('times', 'bold');
+    doc.text('GOVERNMENT / OFFICIAL COPY', pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    doc.setLineWidth(0.5);
+    doc.line(marginLeft, y, pageWidth - marginRight, y);
+    y += 6;
+
+    // Title block
+    doc.setFontSize(11);
+    doc.setFont('times', 'normal');
+    doc.text(title + ' Document', marginLeft, y);
+    y += 8;
+
+    // Date on right
+    const dateStr = new Date().toLocaleDateString();
+    doc.text('Date: ' + dateStr, pageWidth - marginRight, y - 8, { align: 'right' });
+
+    // Body
+    doc.setFontSize(10);
+    doc.setFont('times', 'normal');
+    const lines = doc.splitTextToSize(bodyText, usableWidth);
+    lines.forEach(line => {
+      if (y > 280) { doc.addPage(); y = 20; }
+      doc.text(line, marginLeft, y);
+      y += 6;
+    });
+
+    // Footer
+    y = Math.max(y + 10, 250);
+    doc.setFontSize(10);
+    doc.text('This is a computer generated letter. Signature not required for the demo.', marginLeft, y);
+    // Save
+    const fname = `${title}_document_${Date.now()}.pdf`;
+    doc.save(fname);
+    addMessage(`PDF generated and downloaded: <strong>${fname}</strong>`, 'bot');
+  } catch (err) {
+    console.error(err);
+    addMessage('Error creating PDF. Ensure jsPDF loaded (check console).', 'bot');
+  }
+}
+
+/* ------------------ Hook Enter key on input ------------------ */
+document.getElementById('userInput').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+});
+
+/* ------------------ Dropdown button bindings (for your HTML) ------------------ */
+window.generateRTI = () => startLetterFlow('RTI');
+window.generateFIR = () => startLetterFlow('FIR');
+window.generateAffidavit = () => startLetterFlow('AFFIDAVIT');
+window.generateLegalNotice = () => startLetterFlow('LEGAL');
+window.bonafideCertificate = () => startLetterFlow('BONAFIDE');
+window.birthCertificate = () => startLetterFlow('BIRTH');
+window.generatePAN = () => startLetterFlow('PAN');
+window.generateAadhar = () => startLetterFlow('AADHAR');
+
+/* ------------------ Simple placeholders for trackers (unchanged visual) ------------------ */
+window.trackAadhaar = () => alert('Open Aadhaar tracker (placeholder).');
+window.trackPAN = () => alert('Open PAN tracker (placeholder).');
+window.trackPassport = () => alert('Open Passport tracker (placeholder).');
+window.trackGrievance = () => alert('Open Grievance tracker (placeholder).');
+window.trackpension = () => alert('Open Pension tracker (placeholder).');
+window.trackechallan = () => alert('Open E-Challan tracker (placeholder).');
+
+/* ------------------ End of script ------------------ */
