@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Legal Document Assistant</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+ <header class="gov-header">
+    <div class="header-left">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" 
+        alt="Ashoka Emblem" class="ashoka-logo">
+    </div>
+
+    <div class="header-center">
+      <h1>GOVERNMENT OF INDIA</h1>
+      <div class="gold-underline"></div>
+    </div>
+
+    <div class="header-right">
+      <div class="profile-icon" title="Login">
+        <img src="https://cdn-icons-png.flaticon.com/512/456/456212.png" alt="Profile">
+      </div>
+      <button class="about-btn" onclick="toggleAbout()">About</button>
+    </div>
+  </header>
+
+  <div id="aboutBox" class="about-box">
+    <span class="about-close" onclick="toggleAbout()">×</span>
+    <h2>About This Project</h2>
+    <p>
+      A smart chatbot built with Python, Flask, and AI that automates the creation of government documents. It collects structured information from users, processes it using prompt-based text generation, and exports the final output as formatted PDFs.
+      This project highlights my experience in backend development, chatbot design, API integration, and real-world automation using generative AI.
+    </p>
+  </div>
+
+
+<!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+    <section class="chat-card">
+      <h1>Legal Document Assistant</h1>
+      <p class="subtext">(LegalGen)</p>
+
+      <div class="chat-box" id="messages">
+        <div class="bot">
+          Hello! I'm <b>LegalGen</b>, a friendly and professional AI assistant here to help you draft a legal document.<br><br>
+          Available options: <b>FIR, RTI, Affidavit, Legal Notice, Grievance Letter,</b> or <b>Legal Letter</b>.<br>
+          Please let me know your choice, and we'll get started!
+        </div>
+      </div>
+
+      <div class="input-area">
+        <input type="text" id="userInput" placeholder="Type your message here...">
+        <button class="mic-btn" onclick="startVoice()">🎤</button>
+        <button class="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+    </section>
+    
+    <!-- ===== FEATURE BUTTONS ===== -->
+    <div class="feature-area">
+     <!-- Document Generator (Hover Dropdown) -->
+      <div class="dropdown">
+        <button class="feature-btn">📄 Document Generator</button>
+        <div class="dropdown-menu">
+          <a onclick="generateRTI()">Generate RTI</a>
+          <a onclick="generateFIR()">Generate FIR</a>
+          <a onclick="generateAffidavit()">Generate Affidavit</a>
+          <a onclick="generateLegalNotice()">Generate Legal Notice</a>
+          <a onclick="bonafideCertificate()">Bonafide Certificate</a>
+          <a onclick="birthCertificate()">Birth Certificate</a>
+        </div>
+      </div>
+      <!-- Application Trackers (Hover Dropdown) -->
+      <div class="dropdown">
+        <button class="feature-btn">📍 Application Trackers</button>
+        <div class="dropdown-menu">
+        <a onclick="trackAadhaar()">Aadhaar Status</a>
+        <a onclick="trackPAN()">PAN Card Status</a>
+        <a onclick="trackPassport()">Passport Status</a>
+        <a onclick="trackGrievance()">Grievance Status</a>
+        <a onclick="trackpension()">Pension Status</a>
+        <a onclick="tracke-challan()">E-Challan Status</a>
+      </div>
+    </div>
+    <button class="feature-btn" onclick="openFeedback()">🧾 Feedback</button>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <p>©️ 2025 Government Legal Document Assistant | Educational Use Only</p>
+  </footer>
+
+  <!-- ===== LOGIN POPUP ===== -->
+  <div id="loginModal" class="login-modal">
+    <div class="login-content">
+      <span class="close-btn" onclick="closeLogin()">&times;</span>
+      <h2>Login</h2>
+      <input type="text" id="username" placeholder="Enter Username">
+      <input type="password" id="password" placeholder="Enter Password">
+      <button class="login-btn" onclick="loginUser()">Login</button>
+    </div>
+  </div>
+
+  <!-- ===== FEEDBACK MODAL ===== -->
+  <div id="feedbackModal" class="login-modal">
+    <div class="login-content">
+      <span class="close-btn" onclick="closeFeedback()">&times;</span>
+      <h2>Submit Feedback</h2>
+      <textarea id="feedbackText" placeholder="Write your feedback..." rows="4"></textarea>
+      <button class="login-btn" onclick="submitFeedback()">Submit</button>
+    </div>
+  </div>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script1.js"></script>
+  
+</body>
+</html>
