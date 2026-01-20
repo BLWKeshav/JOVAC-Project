@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify, session, send_file, url_for
+from flask import Flask, render_template, request, jsonify, session, send_file, url_for, redirect
+from functools import wraps
 
 import requests
 from flask_session import Session
@@ -7,11 +8,41 @@ from reportlab.pdfgen import canvas
 import io, os, datetime
 import ollama # Import the new ollama library
 import json   # Import the json library for data extraction
+import hashlib
 
 app = Flask(__name__)
 app.secret_key = "replace_with_a_random_secret"
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
+
+# Simple user database (in production, use a proper database)
+# Format: username: (password_hash, full_name)
+# Default password for demo: "admin123" (hash: sha256)
+USERS = {
+    "admin": (hashlib.sha256("admin123".encode()).hexdigest(), "Administrator"),
+    "ayush": (hashlib.sha256("password123".encode()).hexdigest(), "Ayush Sharma"),
+    "user": (hashlib.sha256("user123".encode()).hexdigest(), "User"),
+}
+
+def _static_version(filename: str) -> int:
+    """
+    Cache-busting version for static assets.
+    Uses file modified time; falls back to 1 if file not found.
+    """
+    try:
+        static_path = os.path.join(app.root_path, "static", filename)
+        return int(os.path.getmtime(static_path))
+    except Exception:
+        return 1
+
+def login_required(f):
+    """Decorator to require login for routes"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Document fields remain the same
 DOC_FIELDS = {
@@ -35,7 +66,7 @@ DOC_FIELDS = {
     "LEGAL_NOTICE": [("sender_name", "Sender full name / Firm name"), ("sender_address", "Sender address & contact"), ("recipient_name", "Recipient full name"), ("recipient_address", "Recipient address & contact"), ("notice_date", "Date of issuing notice"), ("subject_nature", "Subject / nature of dispute"), ("facts_chronology", "Chronology of facts with dates"), ("legal_basis", "Legal basis / contract clause (brief)"), ("demand_relief", "Specific relief / remedy demanded"), ("deadline_days", "Deadline to comply (in days)")],
     "GRIEVANCE_LETTER": [("complainant_name", "Your full name"), ("complainant_address", "Your address & contact"), ("designation", "Your designation / relation to organization (if any)"), ("recipient_org", "Recipient organization / authority"), ("recipient_designation", "Recipient designation (if known)"), ("incident_date_place", "Date & place of incident"), ("incident_details", "Describe grievance / incident"), ("previous_steps", "Previous complaints / steps taken (if any)"), ("desired_resolution", "Desired resolution or remedy"), ("signature_date", "Signature & Date")],
     "BUSINESS_LICENSE": [("applicant_name", "Applicant / Owner full name"), ("business_name", "Registered business / trade name"), ("business_address", "Business address"), ("nature_business", "Nature / type of business activities"), ("license_type", "Type of license required (Trade / Food / GST / Other)"), ("duration_period", "License period requested (e.g., 1 year)"), ("documents_attached", "List of documents attached (ID, proof, plan)"), ("compliance_declaration", "Declaration of compliance with local regulations"), ("contact_info", "Contact number & email"), ("application_date", "Application date")],
-    "LEGAL_LETTER": [("sender", "Sender full name / Firm"), ("recipient", "Recipient full name / Firm"), ("letter_date", "Date of the letter"), ("subject", "Subject / short purpose of letter"), ("background_facts", "Brief factual background (dates and events)"), ("legal_position", "Legal position / rights asserted"), ("request_action", "Specific action or remedy requested"), ("response_deadline", "Deadline for response/compliance (in days)"), ("further_action", "Consequences / further legal action if ignored"), ("signature_info", "Sender signature & contact details")]
+    # "LEGAL_LETTER": [("sender", "Sender full name / Firm"), ("recipient", "Recipient full name / Firm"), ("letter_date", "Date of the letter"), ("subject", "Subject / short purpose of letter"), ("background_facts", "Brief factual background (dates and events)"), ("legal_position", "Legal position / rights asserted"), ("request_action", "Specific action or remedy requested"), ("response_deadline", "Deadline for response/compliance (in days)"), ("further_action", "Consequences / further legal action if ignored"), ("signature_info", "Sender signature & contact details")]
 }
 
 
@@ -385,15 +416,71 @@ IMPORTANT RULES:
 - Be professional and helpful throughout
 """
 
-@app.route('/')
-def index():
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login route"""
+    if request.method == 'GET':
+        # If already logged in, redirect to home
+        if session.get('logged_in'):
+            return redirect(url_for('index'))
+        return render_template('login.html', static_version=_static_version("login.css"))
+    
+    # POST request - handle login
+    data = request.get_json()
+    username = data.get('username', '').strip().lower()
+    password = data.get('password', '')
+    remember_me = data.get('rememberMe', False)
+    
+    # Validate credentials
+    if username in USERS:
+        password_hash, full_name = USERS[username]
+        if hashlib.sha256(password.encode()).hexdigest() == password_hash:
+            # Login successful
+            session['logged_in'] = True
+            session['username'] = username
+            session['full_name'] = full_name
+            
+            # Set session permanence based on remember me
+            if remember_me:
+                session.permanent = True
+            else:
+                session.permanent = False
+            
+            return jsonify({
+                'success': True,
+                'message': 'Login successful',
+                'username': username,
+                'full_name': full_name
+            })
+    
+    # Login failed
+    return jsonify({
+        'success': False,
+        'message': 'Invalid username or password'
+    }), 401
+
+@app.route('/logout')
+def logout():
+    """Logout route"""
     session.clear()
-    # Initialize the conversation history in the session
-    session['messages'] = [{'role': 'system', 'content': SYSTEM_PROMPT}]
+    return redirect(url_for('login'))
+
+@app.route('/')
+@login_required
+def index():
+    # Clear conversation state but keep user session
+    if 'messages' not in session or not session.get('messages'):
+        session['messages'] = [{'role': 'system', 'content': SYSTEM_PROMPT}]
     session['stage'] = 'CONVERSATION'
-    return render_template('index.html')
+    return render_template(
+        'index.html',
+        username=session.get('username', 'User'),
+        full_name=session.get('full_name', 'User'),
+        static_version=_static_version("chatbot.css"),
+    )
 
 @app.route('/chat', methods=['POST'])
+@login_required
 def chat():
     user_msg = (request.json.get('message') or '').strip()
     stage = session.get('stage', 'CONVERSATION')
@@ -621,13 +708,20 @@ Return ONLY the formalized description, nothing else:
 
 
 @app.route('/preview')
+@login_required
 def preview_page():
     """Render the preview page"""
     if not session.get('last_draft'):
         return "No draft available. Please go back and generate a document first.", 400
-    return render_template('preview.html')
+    return render_template(
+        'preview.html',
+        username=session.get('username', 'User'),
+        full_name=session.get('full_name', 'User'),
+        static_version=_static_version("chatbot.css"),
+    )
 
 @app.route('/api/get_preview', methods=['GET'])
+@login_required
 def get_preview():
     """API endpoint to get preview data"""
     draft = session.get('last_draft', '')
@@ -648,6 +742,7 @@ def get_preview():
     })
 
 @app.route('/download_pdf', methods=['GET'])
+@login_required
 def download_pdf():
     try:
         draft = session.get('last_draft','')
@@ -776,6 +871,7 @@ if __name__ == '__main__':
 PDF_GENERATOR_URL = 'http://localhost:5001/api/generate_pdf'
 
 @app.route('/finalize_document', methods=['POST'])
+@login_required
 def finalize_document():
     data = request.get_json(force=True)
     try:

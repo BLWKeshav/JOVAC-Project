@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Legal Document Chatbot</title>
-    <link rel="stylesheet" href="/static/chatbot.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chatbot.css') }}?v={{ static_version|default(1) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 
     <header>
         <div class="header-left">
-            <button class="notice-btn">Notice</button>
+            <button class="notice-btn" onclick="showInfo('notice')">Notice</button>
         </div>
         <div class="header-center">
             <h1>GOVERNMENT OF INDIA</h1>
@@ -19,8 +19,11 @@
         <div class="header-right">
             <i class="fa-solid fa-circle-user user-icon"></i>
             <div class="user-info">
-                <span>ayush sharma</span>
-                <a href="#">About</a>
+                <span id="userName">{{ full_name|default('User') }}</span>
+                <div class="user-menu">
+                    <a href="#" id="aboutLink" onclick="showInfo('about')">About</a>
+                    <a href="/logout" id="logoutLink">Logout</a>
+                </div>
             </div>
         </div>
     </header>
@@ -28,10 +31,8 @@
     <main>
         <div class="generator-container">
             <section id="chat-area">
-                <div id="chatbox">
-                    </div>
-                <div id="generatedDoc">
-                    </div>
+                <div id="chatbox"></div>
+                <div id="generatedDoc"></div>
             </section>
             
             <footer class="inputArea">
@@ -46,22 +47,22 @@
     <section class="key-features">
         <h2>KEY FEATURE</h2>
         <div class="features-grid">
-            <div class="feature-card">
+            <div class="feature-card" onclick="showInfo('pid')">
                 <i class="fa-solid fa-robot feature-icon"></i>
                 <h3>PID Chatbot</h3>
                 <p>interactive assistance for type of document</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card" onclick="showInfo('prompt')">
                 <i class="fa-solid fa-pen-ruler feature-icon"></i>
                 <h3>AI Promt Drafting</h3>
                 <p>smart suggestions to improve your document content</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card" onclick="showInfo('multi')">
                 <i class="fa-solid fa-file-lines feature-icon"></i>
                 <h3>Multi Letter Type</h3>
                 <p>wide variety of government & legal document</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card" onclick="showInfo('lingual')">
                 <i class="fa-solid fa-language feature-icon"></i>
                 <h3>Multi Lingual</h3>
                 <p>generate documents in multiple language</p>
@@ -69,6 +70,47 @@
         </div>
     </section>
 
+    <div id="infoModal" class="custom-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Information</h2>
+            <hr>
+            <p id="modalBody">Details about your project will appear here.</p>
+        </div>
+    </div>
+
     <script src="/static/chatbot.js"></script>
+    
+    <script>
+        function showInfo(type) {
+            const modal = document.getElementById('infoModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            
+            const info = {
+                'notice': 'IMPORTANT NOTICE: This system is for drafting assistance. Please review all documents legally before use.',
+                'about': 'ABOUT PROJECT: This Legal Document Chatbot is designed to streamline government and legal documentation using AI.',
+                'pid': 'PID CHATBOT: An interactive AI assistant that guides you through a decision tree to find the exact legal form you need.',
+                'prompt': 'AI PROMPT DRAFTING: Uses advanced Natural Language Processing to refine your rough drafts into formal legal letters.',
+                'multi': 'MULTI LETTER TYPE: Supports a vast library including Affidavits, Rent Agreements, and Leave Applications.',
+                'lingual': 'MULTI LINGUAL: Break language barriers by generating documents in Hindi, English, and other regional Indian languages.'
+            };
+
+            title.innerText = type.toUpperCase().replace('_', ' ');
+            body.innerText = info[type];
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
+        // Close when clicking outside the box
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('infoModal')) {
+                closeModal();
+            }
+        }
+    </script>
 </body>
 </html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Government of India Legal Document Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}?v={{ static_version|default(1) }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-background">
+            <div class="background-overlay"></div>
+        </div>
+        
+        <div class="login-content">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="logo-section">
+                        <i class="fa-solid fa-shield-halved logo-icon"></i>
+                        <h1>GOVERNMENT OF INDIA</h1>
+                        <p class="subtitle">Legal Document Generator</p>
+                    </div>
+                </div>
+
+                <div class="login-body">
+                    <h2>Welcome Back</h2>
+                    <p class="login-description">Sign in to access the legal document generation system</p>
+                    
+                    <form id="loginForm" class="login-form">
+                        <div class="form-group">
+                            <label for="username">
+                                <i class="fa-solid fa-user"></i>
+                                Username
+                            </label>
+                            <input 
+                                type="text" 
+                                id="username" 
+                                name="username" 
+                                placeholder="Enter your username" 
+                                required
+                                autocomplete="username"
+                            >
+                            <span class="input-focus-line"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">
+                                <i class="fa-solid fa-lock"></i>
+                                Password
+                            </label>
+                            <div class="password-input-wrapper">
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name="password" 
+                                    placeholder="Enter your password" 
+                                    required
+                                    autocomplete="current-password"
+                                >
+                                <button type="button" class="password-toggle" id="passwordToggle">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                            <span class="input-focus-line"></span>
+                        </div>
+
+                        <div class="form-options">
+                            <label class="remember-me">
+                                <input type="checkbox" id="rememberMe" name="rememberMe">
+                                <span>Remember me</span>
+                            </label>
+                            <a href="#" class="forgot-password">Forgot Password?</a>
+                        </div>
+
+                        <div id="errorMessage" class="error-message" style="display: none;">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <span id="errorText"></span>
+                        </div>
+
+                        <button type="submit" class="login-btn" id="loginBtn">
+                            <span class="btn-text">Sign In</span>
+                            <i class="fa-solid fa-arrow-right btn-icon"></i>
+                        </button>
+                    </form>
+
+                    <div class="login-footer">
+                        <p>Don't have an account? <a href="#" class="register-link">Contact Administrator</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features-preview">
+                <h3>Key Features</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <i class="fa-solid fa-robot"></i>
+                        <span>AI-Powered Chatbot</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-file-lines"></i>
+                        <span>Legal Document Generation</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-language"></i>
+                        <span>Multi-Lingual Support</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-shield"></i>
+                        <span>Secure & Confidential</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/login.js"></script>
+</body>
+</html>
+

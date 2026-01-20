@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Preview - Legal Document Generator</title>
-    <link rel="stylesheet" href="/static/chatbot.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chatbot.css') }}?v={{ static_version|default(1) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         .preview-container {
@@ -161,8 +161,11 @@
         <div class="header-right">
             <i class="fa-solid fa-circle-user user-icon"></i>
             <div class="user-info">
-                <span>ayush sharma</span>
-                <a href="#">About</a>
+                <span id="userName">{{ full_name|default('User') }}</span>
+                <div class="user-menu">
+                    <a href="#" id="aboutLink">About</a>
+                    <a href="/logout" id="logoutLink">Logout</a>
+                </div>
             </div>
         </div>
     </header>
